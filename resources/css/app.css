@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.font-jakarta {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.nav-link-active {
+    background-color: #FFFBEB; /* amber-50 */
+    color: #B45309; /* amber-700 */
+    border-left: 4px solid #F59E0B; /* amber-500 */
+}
