@@ -144,18 +144,17 @@ function ReceiptPreview({ receiptData, settings }) {
 }
 
 // Modal Print Receipt
-// Modal Print Receipt
 function PrintReceiptModal({ isOpen, receiptData, onClose, settings }) {
     const handleDownloadPDF = () => {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({
             unit: 'mm',
-            format: [58, 200] // Ukuran kertas PDF
+            format: [57, 200] // Ukuran kertas PDF diubah ke 57mm
         });
 
         // --- VARIABEL UNTUK KONTROL LAYOUT ---
         let yPosition = 10;
-        const pageWidth = 58;
+        const pageWidth = 57; // Diubah ke 57mm
         const leftMargin = 3;
         const rightMargin = pageWidth - 3; // Posisi rata kanan
         
@@ -208,7 +207,7 @@ function PrintReceiptModal({ isOpen, receiptData, onClose, settings }) {
             doc.text(item.name, leftMargin, yPosition);
             yPosition += 4;
             // Kuantitas & harga satuan (rata kiri)
-            doc.text(`  ${item.quantity} x ${formatRupiah(item.price)}`, leftMargin, yPosition);
+            doc.text(`  ${item.quantity} x ${formatRupiah(item.price)}`, leftMargin, yPosition);
             // Subtotal (rata kanan)
             doc.text(formatRupiah(item.subtotal), rightMargin, yPosition, { align: 'right' });
             yPosition += 4;
@@ -249,14 +248,13 @@ function PrintReceiptModal({ isOpen, receiptData, onClose, settings }) {
     };
 
     const handleDirectPrint = () => {
-        // PERBAIKAN: Ganti ID yang salah ketik
         const printContent = document.getElementById('receipt-only-content').innerHTML;
 
         const printStyles = `
             <style>
                 @media print {
                     @page {
-                        size: 58mm auto; /* Ukuran kertas 58mm */
+                        size: 57mm auto; /* Ukuran kertas diubah ke 57mm */
                         margin: 0;
                     }
                     html, body {
@@ -264,7 +262,7 @@ function PrintReceiptModal({ isOpen, receiptData, onClose, settings }) {
                         padding: 0 !important;
                     }
                     body {
-                        width: 58mm;
+                        width: 57mm; /* Diubah ke 57mm */
                         box-sizing: border-box !important;
                         padding-left: 3mm !important;
                         padding-right: 1mm !important;
@@ -280,6 +278,35 @@ function PrintReceiptModal({ isOpen, receiptData, onClose, settings }) {
                     strong {
                         font-weight: bold;
                     }
+                    /* PERBAIKAN UTAMA: Sembunyikan semua elemen modal saat print */
+                    .modal-header,
+                    .modal-buttons,
+                    .modal-close,
+                    .preview-container,
+                    .preview-header,
+                    .print-actions,
+                    h3, h4,
+                    button,
+                    .grid,
+                    .border-dashed,
+                    .bg-gray-50,
+                    .text-center:has(button),
+                    .flex.justify-between,
+                    .grid.grid-cols-2 {
+                        display: none !important;
+                    }
+                    /* Pastikan hanya konten struk yang tampil */
+                    #receipt-only-content {
+                        display: block !important;
+                    }
+                }
+                
+                /* Style default untuk preview (tidak berubah) */
+                .modal-header,
+                .modal-buttons,
+                .preview-container,
+                .preview-header {
+                    display: block;
                 }
             </style>
         `;
@@ -294,20 +321,18 @@ function PrintReceiptModal({ isOpen, receiptData, onClose, settings }) {
         doc.write('<html><head>');
         doc.write(printStyles);
         doc.write('</head><body>');
-
         doc.write(printContent);
-
         doc.write('</body></html>');
         doc.close();
         
         setTimeout(() => {
             iframe.contentWindow.focus();
             iframe.contentWindow.print();
-        }, 50);
+        }, 100); // Sedikit ditambah delay untuk memastikan styles loaded
         
         setTimeout(() => {
             document.body.removeChild(iframe);
-        }, 500);
+        }, 1000); // Ditambah delay untuk cleanup
     };
 
     if (!isOpen) return null;
@@ -315,25 +340,26 @@ function PrintReceiptModal({ isOpen, receiptData, onClose, settings }) {
     return (
         <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md max-h-screen overflow-y-auto">
-                <div className="flex justify-between items-center mb-4">
+                <div className="flex justify-between items-center mb-4 modal-header">
                     <h3 className="text-xl font-bold">Cetak Struk</h3>
-                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl modal-close">&times;</button>
                 </div>
                 
                 {/* Receipt Preview */}
-                <div className="border border-gray-300 rounded-lg p-4 mb-4 bg-gray-50">
-                    <h4 className="text-sm font-semibold mb-2 text-center">Preview Struk</h4>
+                <div className="border border-gray-300 rounded-lg p-4 mb-4 bg-gray-50 preview-container">
+                    <h4 className="text-sm font-semibold mb-2 text-center preview-header">Preview Struk</h4>
                     <div id="receipt-preview" className="border border-dashed border-gray-400 bg-white">
                         <ReceiptPreview receiptData={receiptData} settings={settings} />
                     </div>
                 </div>
 
+                {/* Hidden content untuk print - hanya konten struk */}
                 <div id="receipt-only-content" style={{ display: 'none' }}>
                     <ReceiptPreview receiptData={receiptData} settings={settings} />
                 </div>
 
                 {/* Action Buttons */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-3 modal-buttons">
                     <button 
                         onClick={handleDownloadPDF}
                         className="flex items-center justify-center gap-2 bg-blue-500 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-600 transition"
@@ -350,7 +376,7 @@ function PrintReceiptModal({ isOpen, receiptData, onClose, settings }) {
                     </button>
                 </div>
                 
-                <div className="mt-4 text-center">
+                <div className="mt-4 text-center modal-buttons">
                     <button 
                         onClick={onClose}
                         className="text-gray-500 hover:text-gray-700 text-sm"
