@@ -248,91 +248,80 @@ function PrintReceiptModal({ isOpen, receiptData, onClose, settings }) {
     };
 
     const handleDirectPrint = () => {
-        const printContent = document.getElementById('receipt-only-content').innerHTML;
-
+        // Tambahkan style print langsung ke halaman
         const printStyles = `
-            <style>
-                @media print {
-                    @page {
-                        size: 57mm auto; /* Ukuran kertas diubah ke 57mm */
-                        margin: 0;
-                    }
-                    html, body {
-                        margin: 0 !important;
-                        padding: 0 !important;
-                    }
-                    body {
-                        width: 57mm; /* Diubah ke 57mm */
-                        box-sizing: border-box !important;
-                        padding-left: 3mm !important;
-                        padding-right: 1mm !important;
-                    }
-                    body * {
-                        font-family: monospace !important;
-                        font-size: 10px !important;
-                        line-height: 1.2 !important;
-                    }
-                    table {
-                        width: 100%;
-                    }
-                    strong {
-                        font-weight: bold;
-                    }
-                    /* PERBAIKAN UTAMA: Sembunyikan semua elemen modal saat print */
-                    .modal-header,
-                    .modal-buttons,
-                    .modal-close,
-                    .preview-container,
-                    .preview-header,
-                    .print-actions,
-                    h3, h4,
-                    button,
-                    .grid,
-                    .border-dashed,
-                    .bg-gray-50,
-                    .text-center:has(button),
-                    .flex.justify-between,
-                    .grid.grid-cols-2 {
-                        display: none !important;
-                    }
-                    /* Pastikan hanya konten struk yang tampil */
-                    #receipt-only-content {
-                        display: block !important;
-                    }
+            @media print {
+                @page {
+                    size: 57mm auto;
+                    margin: 0;
                 }
-                
-                /* Style default untuk preview (tidak berubah) */
-                .modal-header,
-                .modal-buttons,
-                .preview-container,
-                .preview-header {
-                    display: block;
+                html, body {
+                    margin: 0 !important;
+                    padding: 0 !important;
                 }
-            </style>
+                body {
+                    width: 57mm;
+                    box-sizing: border-box !important;
+                    padding-left: 3mm !important;
+                    padding-right: 1mm !important;
+                }
+                body * {
+                    font-family: monospace !important;
+                    font-size: 10px !important;
+                    line-height: 1.2 !important;
+                }
+                table {
+                    width: 100%;
+                }
+                strong {
+                    font-weight: bold;
+                }
+                /* Sembunyikan SEMUA elemen kecuali konten struk */
+                body > *:not(#receipt-only-content) {
+                    display: none !important;
+                }
+                .fixed, .bg-gray-800, .bg-white, .rounded-lg, .shadow-xl,
+                .modal-header, .modal-buttons, .modal-close, .preview-container,
+                .preview-header, .print-actions, h3, h4, button, .grid,
+                .border-dashed, .bg-gray-50, .text-center, .flex, .mb-4 {
+                    display: none !important;
+                }
+                /* Tampilkan hanya konten struk */
+                #receipt-only-content {
+                    display: block !important;
+                    visibility: visible !important;
+                    position: static !important;
+                    width: 100% !important;
+                    height: auto !important;
+                }
+            }
         `;
-        
-        const iframe = document.createElement('iframe');
-        iframe.style.position = 'absolute';
-        iframe.style.left = '-9999px';
-        document.body.appendChild(iframe);
 
-        const doc = iframe.contentWindow.document;
-        doc.open();
-        doc.write('<html><head>');
-        doc.write(printStyles);
-        doc.write('</head><body>');
-        doc.write(printContent);
-        doc.write('</body></html>');
-        doc.close();
-        
+        // Hapus style print yang ada (jika ada)
+        const existingStyle = document.getElementById('temp-print-styles');
+        if (existingStyle) {
+            existingStyle.remove();
+        }
+
+        // Tambahkan style print temporary
+        const styleElement = document.createElement('style');
+        styleElement.id = 'temp-print-styles';
+        styleElement.textContent = printStyles;
+        document.head.appendChild(styleElement);
+
+        // Tampilkan konten struk untuk print
+        const receiptContent = document.getElementById('receipt-only-content');
+        const originalDisplay = receiptContent.style.display;
+        receiptContent.style.display = 'block';
+
+        // Print langsung
+        window.print();
+
+        // Cleanup setelah print
         setTimeout(() => {
-            iframe.contentWindow.focus();
-            iframe.contentWindow.print();
-        }, 100); // Sedikit ditambah delay untuk memastikan styles loaded
-        
-        setTimeout(() => {
-            document.body.removeChild(iframe);
-        }, 1000); // Ditambah delay untuk cleanup
+            receiptContent.style.display = originalDisplay;
+            styleElement.remove();
+        }, 1000);
     };
 
     if (!isOpen) return null;
