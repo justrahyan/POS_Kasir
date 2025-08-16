@@ -13,6 +13,8 @@
      data-products-url="{{ route('products.index') }}">
 </div>
 
+<audio id="payment-success-sound" src="{{ asset('audio/success.mp3') }}" preload="auto"></audio>
+
 <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -459,7 +461,7 @@ function App() {
                     onSuccess: function(result){
                         console.log('success', result);
                         // Simpan transaksi di DB setelah pembayaran berhasil
-                        handleSubmitOrder(result.order_id, result);
+                        handlePaymentSuccess(result.order_id, result);
                         setIsProcessingPayment(false);
                     },
                     onPending: function(result){
@@ -490,10 +492,32 @@ function App() {
             setIsProcessingPayment(false);
         });
     };
+
+    const handlePaymentSuccess = (orderId, paymentResult) => {
+        // Panggil fungsi untuk memainkan suara
+        playSound('success');
+
+        // Lanjutkan dengan proses handleSubmitOrder
+        handleSubmitOrder(orderId, paymentResult);
+    };
+
+    const playSound = (soundType) => {
+        const audio = document.getElementById('payment-success-sound');
+        if (audio) {
+            audio.play().catch(error => {
+                console.error("Autoplay was prevented:", error);
+                // Anda bisa menambahkan notifikasi visual di sini jika autoplay gagal
+            });
+        }
+    };
     
     const handleSubmitOrder = (orderId, paymentResult = null, event = null) => {
         if (event) {
             event.preventDefault();
+        }
+
+        if (paymentMethod === 'cash') {
+            playSound('success');
         }
         
         const paidAmount = paymentMethod === 'qris' ? total : (parseFloat(amountPaid.replace(/\./g, '')) || 0);
