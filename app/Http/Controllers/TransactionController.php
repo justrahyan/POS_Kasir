@@ -16,7 +16,7 @@ class TransactionController extends Controller
     public function index()
     {
         $products = Product::all();
-        $settings = Setting::pluck('value', 'key')->all(); 
+        $settings = Setting::pluck('value', 'key')->all();
         $categories = Category::all();
         return view('kasir.index', compact('products', 'settings', 'categories'));
     }
@@ -31,7 +31,7 @@ class TransactionController extends Controller
             'items' => 'required|array|min:1',
             'invoice_number' => 'nullable|string',
             'status' => 'nullable|string',
-            'items.*.id' => 'required|integer|exists:products,id', // Pastikan produk ada
+            'items.*.id' => 'required|integer|exists:products,id',
             'items.*.qty' => 'required|integer|min:1',
             'items.*.price' => 'required|numeric',
             'items.*.subtotal' => 'required|numeric',
@@ -50,12 +50,16 @@ class TransactionController extends Controller
             ]);
 
             foreach ($validated['items'] as $item) {
+                $product = Product::find($item['id']);
+                
                 TransactionDetail::create([
                     'transaction_id' => $transaction->id,
                     'product_id' => $item['id'],
                     'qty' => $item['qty'],
                     'price' => $item['price'],
                     'subtotal' => $item['subtotal'],
+                    'product_name' => $product->name,
+                    'product_image' => $product->image,
                 ]);
             }
 
@@ -69,9 +73,7 @@ class TransactionController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-
             Log::error('Error creating transaction: ' . $e->getMessage());
-
             return response()->json([
                 'success' => false,
                 'message' => 'Terjadi kesalahan internal saat menyimpan transaksi.',
@@ -79,7 +81,6 @@ class TransactionController extends Controller
         }
     }
 
-    // Laporan transaksi
     public function laporan(Request $request)
     {
         $sortColumn = $request->input('sort', 'id');
@@ -92,7 +93,7 @@ class TransactionController extends Controller
 
         $metode = $request->input('metode');
 
-        $query = Transaction::with('details.product');
+        $query = Transaction::with('details');
 
         if ($metode && in_array($metode, ['cash', 'qris'])) {
             $query->where('metode_pembayaran', $metode);

@@ -6,16 +6,12 @@
 
 <div class="bg-gray-50 rounded-lg p-4 sm:p-6 lg:p-8">
     <div class="max-w-7xl mx-auto">
-
-        {{-- Header Halaman --}}
         <div class="mb-8">
             <h1 class="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 tracking-tight">Laporan Transaksi</h1>
             <p class="mt-1 text-sm text-gray-600">Ringkasan dan riwayat semua transaksi yang telah tercatat.</p>
         </div>
 
-        {{-- Kartu Ringkasan (Summary Cards) --}}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {{-- Total Pendapatan --}}
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200/80">
                 <div class="flex items-start justify-between">
                     <div>
@@ -27,7 +23,6 @@
                     </div>
                 </div>
             </div>
-            {{-- Jumlah Transaksi --}}
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200/80">
                 <div class="flex items-start justify-between">
                     <div>
@@ -39,7 +34,6 @@
                     </div>
                 </div>
             </div>
-            {{-- Rata-rata per Transaksi --}}
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200/80">
                 <div class="flex items-start justify-between">
                     <div>
@@ -53,7 +47,6 @@
             </div>
         </div>
 
-        {{-- Tabel Transaksi --}}
         <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200/80">
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
@@ -62,37 +55,19 @@
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 <a href="{{ route('laporan.index', ['sort' => 'id', 'direction' => request('direction') == 'asc' ? 'desc' : 'asc']) }}" class="flex items-start gap-2">
                                     No. Invoice
-                                    <i class="fa-solid 
-                                        @if(request('sort') == 'id')
-                                            {{ request('direction') == 'asc' ? 'fa-sort-up' : 'fa-sort-down' }}
-                                        @else
-                                            fa-sort-down
-                                        @endif">
-                                    </i>
+                                    <i class="fa-solid @if(request('sort') == 'id') {{ request('direction') == 'asc' ? 'fa-sort-up' : 'fa-sort-down' }} @else fa-sort-down @endif"></i>
                                 </a>
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 <a href="{{ route('laporan.index', ['sort' => 'created_at', 'direction' => request('direction') == 'asc' ? 'desc' : 'asc']) }}" class="flex items-start gap-2">
                                     Tanggal
-                                    <i class="fa-solid 
-                                        @if(request('sort') == 'created_at')
-                                            {{ request('direction') == 'asc' ? 'fa-sort-up' : 'fa-sort-down' }}
-                                        @else
-                                            fa-sort-down
-                                        @endif">
-                                    </i>
+                                    <i class="fa-solid @if(request('sort') == 'created_at') {{ request('direction') == 'asc' ? 'fa-sort-up' : 'fa-sort-down' }} @else fa-sort-down @endif"></i>
                                 </a>
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                 <a href="{{ route('laporan.index', ['sort' => 'total', 'direction' => request('direction') == 'asc' ? 'desc' : 'asc']) }}" class="flex items-start gap-2">
+                                <a href="{{ route('laporan.index', ['sort' => 'total', 'direction' => request('direction') == 'asc' ? 'desc' : 'asc']) }}" class="flex items-start gap-2">
                                     Total
-                                    <i class="fa-solid 
-                                        @if(request('sort') == 'total')
-                                            {{ request('direction') == 'asc' ? 'fa-sort-up' : 'fa-sort-down' }}
-                                        @else
-                                            fa-sort-down
-                                        @endif">
-                                    </i>
+                                    <i class="fa-solid @if(request('sort') == 'total') {{ request('direction') == 'asc' ? 'fa-sort-up' : 'fa-sort-down' }} @else fa-sort-down @endif"></i>
                                 </a>
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
@@ -101,10 +76,7 @@
                                         Metode Pembayaran
                                         <i class="fa-solid fa-sort-down text-gray-500"></i>
                                     </button>
-                                    <div x-show="filterOpen"
-                                        x-transition
-                                        class="absolute left-0 z-10 mt-2 w-40 origin-top-left rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-                                        x-cloak>
+                                    <div x-show="filterOpen" x-transition class="absolute left-0 z-10 mt-2 w-40 origin-top-left rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none" x-cloak>
                                         <div class="py-1">
                                             <a href="{{ route('laporan.index', request()->except(['metode', 'page'])) }}" class="text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100 {{ !request('metode') ? 'font-bold bg-gray-50' : '' }}">
                                                 Semua
@@ -124,7 +96,6 @@
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200" x-data="{ open: null }">
                         @forelse ($transactions as $trx)
-                            {{-- Baris Utama Transaksi --}}
                             <tr class="hover:bg-gray-50">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">INV-{{ $trx->id }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $trx->created_at->format('d M Y, H:i') }}</td>
@@ -145,7 +116,6 @@
                                     </button>
                                 </td>
                             </tr>
-                            {{-- Baris Detail (Expandable) --}}
                             <tr x-show="open === {{ $trx->id }}" x-cloak x-transition>
                                 <td colspan="5" class="p-0">
                                     <div class="p-4 bg-gray-50">
@@ -157,9 +127,18 @@
                                             @foreach($trx->details as $detail)
                                             <li class="py-2 flex justify-between items-center">
                                                 <div class="flex items-center gap-3">
-                                                    <img src="{{ $detail->product->image ? asset('storage/' . $detail->product->image) : 'https://placehold.co/100x100/e2e8f0/64748b?text=...' }}" alt="{{ $detail->product->name }}" class="w-10 h-10 object-cover rounded-md">
+                                                    @if ($detail->product_image)
+                                                        <img 
+                                                            src="{{ asset('storage/' . $detail->product_image) }}" 
+                                                            alt="{{ $detail->product_name ?? 'Produk Dihapus' }}" 
+                                                            class="w-10 h-10 object-cover rounded-md">
+                                                    @else
+                                                        <div class="w-10 h-10 flex items-center justify-center bg-gray-200 rounded-md">
+                                                            <i class="fa-solid fa-image text-gray-500 text-2xl"></i>
+                                                        </div>
+                                                    @endif
                                                     <div>
-                                                        <p class="text-sm font-medium text-gray-800">{{ $detail->product->name }}</p>
+                                                        <p class="text-sm font-medium text-gray-800">{{ $detail->product_name }}</p>
                                                         <p class="text-xs text-gray-500">{{ $detail->qty }} x Rp{{ number_format($detail->price, 0, ',', '.') }}</p>
                                                     </div>
                                                 </div>
@@ -183,7 +162,6 @@
                 </table>
             </div>
         </div>
-
         <div class="mt-6">
             {{ $transactions->links() }}
         </div>

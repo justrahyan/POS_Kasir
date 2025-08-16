@@ -13,12 +13,9 @@ class TransactionDetail extends Model
         'qty',
         'price',
         'subtotal',
+        'product_name',
+        'product_image',
     ];
-
-    public function product(): BelongsTo
-    {
-        return $this->belongsTo(Product::class);
-    }
 
     public function transaction(): BelongsTo
     {

@@ -9,7 +9,8 @@
      data-settings='@json($settings)'
      data-categories='@json($categories)'
      data-midtrans-client-key="{{ config('midtrans.client_key') }}"
-     data-midtrans-charge-url="{{ route('payment.midtrans.charge') }}">
+     data-midtrans-charge-url="{{ route('payment.midtrans.charge') }}"
+     data-products-url="{{ route('products.index') }}">
 </div>
 
 <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -365,6 +366,7 @@ function App() {
     const categories = JSON.parse(appElement.dataset.categories);
     const midtransClientKey = appElement.dataset.midtransClientKey;
     const midtransChargeUrl = appElement.dataset.midtransChargeUrl;
+    const productsUrl = appElement.dataset.productsUrl;
 
     const [cart, setCart] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -628,7 +630,7 @@ function App() {
                             <i className="fa-solid fa-box-open text-4xl text-gray-300"></i>
                             <h3 className="mt-2 text-sm font-medium text-gray-900">Belum Ada Produk</h3>
                             <p className="mt-1 text-sm text-gray-500">Silakan tambahkan produk terlebih dahulu.</p>
-                            <a href="{{ route('products.index') }}" className="mt-4 text-center text-sm font-medium text-amber-600 hover:text-amber-500">
+                            <a href={productsUrl} className="mt-4 text-center text-sm font-medium text-amber-600 hover:text-amber-500">
                                 Tambah Produk
                             </a> 
                         </div>
