@@ -146,109 +146,109 @@ function ReceiptPreview({ receiptData, settings }) {
 // Modal Print Receipt
 function PrintReceiptModal({ isOpen, receiptData, onClose, settings }) {
     const handleDownloadPDF = () => {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({
-        unit: 'mm',
-        format: [58, 200] // Ukuran kertas PDF
-    });
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({
+            unit: 'mm',
+            format: [58, 200] // Ukuran kertas PDF
+        });
 
-    // --- VARIABEL UNTUK KONTROL LAYOUT ---
-    let yPosition = 10;
-    const pageWidth = 58;
-    const leftMargin = 3;
-    const rightMargin = pageWidth - 3; // Posisi rata kanan
-    
-    // --- FUNGSI BANTU UNTUK GARIS PEMISAH ---
-    const drawLine = () => {
-        yPosition += 2;
-        doc.setLineDashPattern([1, 1], 0); // Garis putus-putus
-        doc.line(leftMargin, yPosition, rightMargin, yPosition);
+        // --- VARIABEL UNTUK KONTROL LAYOUT ---
+        let yPosition = 10;
+        const pageWidth = 58;
+        const leftMargin = 3;
+        const rightMargin = pageWidth - 3; // Posisi rata kanan
+        
+        // --- FUNGSI BANTU UNTUK GARIS PEMISAH ---
+        const drawLine = () => {
+            yPosition += 2;
+            doc.setLineDashPattern([1, 1], 0); // Garis putus-putus
+            doc.line(leftMargin, yPosition, rightMargin, yPosition);
+            yPosition += 4;
+            doc.setLineDashPattern([], 0); // Kembali ke garis solid
+        };
+
+        // --- HEADER ---
+        doc.setFont(undefined, 'bold');
+        doc.setFontSize(10);
+        doc.text(settings.store_name || 'NAMA TOKO', pageWidth / 2, yPosition, { align: 'center' });
         yPosition += 4;
-        doc.setLineDashPattern([], 0); // Kembali ke garis solid
+        doc.setFont(undefined, 'normal');
+        doc.setFontSize(7);
+        doc.text(settings.store_address || 'Alamat Toko', pageWidth / 2, yPosition, { align: 'center' });
+        yPosition += 3;
+        doc.text(`Telp: ${settings.store_phone || 'No. Telepon'}`, pageWidth / 2, yPosition, { align: 'center' });
+        
+        drawLine();
+
+        // --- INFO TRANSAKSI (DENGAN RATA KANAN) ---
+        const currentDate = new Date().toLocaleDateString('id-ID', {
+            day: '2-digit', month: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+        });
+        
+        doc.setFontSize(8);
+        // Baris No Transaksi
+        doc.text('No Transaksi', leftMargin, yPosition);
+        doc.text(`#${receiptData.transactionId || 'TRX001'}`, rightMargin, yPosition, { align: 'right' });
+        yPosition += 4;
+        // Baris Tanggal
+        doc.text('Tanggal', leftMargin, yPosition);
+        doc.text(currentDate, rightMargin, yPosition, { align: 'right' });
+        yPosition += 4;
+        // Baris Kasir
+        doc.text('Kasir', leftMargin, yPosition);
+        doc.text('Admin', rightMargin, yPosition, { align: 'right' });
+
+        drawLine();
+
+        // --- DAFTAR ITEM ---
+        receiptData.items.forEach(item => {
+            // Nama item
+            doc.text(item.name, leftMargin, yPosition);
+            yPosition += 4;
+            // Kuantitas & harga satuan (rata kiri)
+            doc.text(`  ${item.quantity} x ${formatRupiah(item.price)}`, leftMargin, yPosition);
+            // Subtotal (rata kanan)
+            doc.text(formatRupiah(item.subtotal), rightMargin, yPosition, { align: 'right' });
+            yPosition += 4;
+        });
+
+        drawLine();
+
+        // --- TOTALS ---
+        // Baris TOTAL
+        doc.setFont(undefined, 'bold');
+        doc.text('TOTAL', leftMargin, yPosition);
+        doc.text(formatRupiah(receiptData.total), rightMargin, yPosition, { align: 'right' });
+        yPosition += 4;
+        doc.setFont(undefined, 'normal');
+        // Baris Bayar
+        doc.text(`Bayar (${receiptData.paymentMethod === 'cash' ? 'Tunai' : 'QRIS'})`, leftMargin, yPosition);
+        doc.text(formatRupiah(receiptData.paid), rightMargin, yPosition, { align: 'right' });
+        yPosition += 4;
+        // Baris Kembalian (jika ada)
+        if (receiptData.change > 0) {
+            doc.text('Kembalian', leftMargin, yPosition);
+            doc.text(formatRupiah(receiptData.change), rightMargin, yPosition, { align: 'right' });
+            yPosition += 4;
+        }
+        
+        drawLine();
+
+        // --- FOOTER ---
+        doc.setFontSize(7);
+        doc.text('Terima kasih atas kunjungan Anda!', pageWidth / 2, yPosition, { align: 'center' });
+        yPosition += 3;
+        doc.text('Barang yang sudah dibeli', pageWidth / 2, yPosition, { align: 'center' });
+        yPosition += 3;
+        doc.text('tidak dapat dikembalikan', pageWidth / 2, yPosition, { align: 'center' });
+
+        // --- SIMPAN PDF ---
+        doc.save(`struk_${receiptData.transactionId || 'TRX001'}.pdf`);
     };
 
-    // --- HEADER ---
-    doc.setFont(undefined, 'bold');
-    doc.setFontSize(10);
-    doc.text(settings.store_name || 'NAMA TOKO', pageWidth / 2, yPosition, { align: 'center' });
-    yPosition += 4;
-    doc.setFont(undefined, 'normal');
-    doc.setFontSize(7);
-    doc.text(settings.store_address || 'Alamat Toko', pageWidth / 2, yPosition, { align: 'center' });
-    yPosition += 3;
-    doc.text(`Telp: ${settings.store_phone || 'No. Telepon'}`, pageWidth / 2, yPosition, { align: 'center' });
-    
-    drawLine();
-
-    // --- INFO TRANSAKSI (DENGAN RATA KANAN) ---
-    const currentDate = new Date().toLocaleDateString('id-ID', {
-        day: '2-digit', month: '2-digit', year: 'numeric',
-        hour: '2-digit', minute: '2-digit'
-    });
-    
-    doc.setFontSize(8);
-    // Baris No Transaksi
-    doc.text('No Transaksi', leftMargin, yPosition);
-    doc.text(`#${receiptData.transactionId || 'TRX001'}`, rightMargin, yPosition, { align: 'right' });
-    yPosition += 4;
-    // Baris Tanggal
-    doc.text('Tanggal', leftMargin, yPosition);
-    doc.text(currentDate, rightMargin, yPosition, { align: 'right' });
-    yPosition += 4;
-    // Baris Kasir
-    doc.text('Kasir', leftMargin, yPosition);
-    doc.text('Admin', rightMargin, yPosition, { align: 'right' });
-
-    drawLine();
-
-    // --- DAFTAR ITEM ---
-    receiptData.items.forEach(item => {
-        // Nama item
-        doc.text(item.name, leftMargin, yPosition);
-        yPosition += 4;
-        // Kuantitas & harga satuan (rata kiri)
-        doc.text(`  ${item.quantity} x ${formatRupiah(item.price)}`, leftMargin, yPosition);
-        // Subtotal (rata kanan)
-        doc.text(formatRupiah(item.subtotal), rightMargin, yPosition, { align: 'right' });
-        yPosition += 4;
-    });
-
-    drawLine();
-
-    // --- TOTALS ---
-    // Baris TOTAL
-    doc.setFont(undefined, 'bold');
-    doc.text('TOTAL', leftMargin, yPosition);
-    doc.text(formatRupiah(receiptData.total), rightMargin, yPosition, { align: 'right' });
-    yPosition += 4;
-    doc.setFont(undefined, 'normal');
-    // Baris Bayar
-    doc.text(`Bayar (${receiptData.paymentMethod === 'cash' ? 'Tunai' : 'QRIS'})`, leftMargin, yPosition);
-    doc.text(formatRupiah(receiptData.paid), rightMargin, yPosition, { align: 'right' });
-    yPosition += 4;
-    // Baris Kembalian (jika ada)
-    if (receiptData.change > 0) {
-        doc.text('Kembalian', leftMargin, yPosition);
-        doc.text(formatRupiah(receiptData.change), rightMargin, yPosition, { align: 'right' });
-        yPosition += 4;
-    }
-    
-    drawLine();
-
-    // --- FOOTER ---
-    doc.setFontSize(7);
-    doc.text('Terima kasih atas kunjungan Anda!', pageWidth / 2, yPosition, { align: 'center' });
-    yPosition += 3;
-    doc.text('Barang yang sudah dibeli', pageWidth / 2, yPosition, { align: 'center' });
-    yPosition += 3;
-    doc.text('tidak dapat dikembalikan', pageWidth / 2, yPosition, { align: 'center' });
-
-    // --- SIMPAN PDF ---
-    doc.save(`struk_${receiptData.transactionId || 'TRX001'}.pdf`);
-};
-
     const handleDirectPrint = () => {
-        const printContent = document.getElementById('receipt-preview').innerHTML;
+        const printContent = document.getElementById('receipt-only-content').innerHTML;
         
         const printStyles = `
             <style>
@@ -324,6 +324,10 @@ function PrintReceiptModal({ isOpen, receiptData, onClose, settings }) {
                     <div id="receipt-preview" className="border border-dashed border-gray-400 bg-white">
                         <ReceiptPreview receiptData={receiptData} settings={settings} />
                     </div>
+                </div>
+
+                <div id="receipt-only-content" style={{ display: 'none' }}>
+                    <ReceiptPreview receiptData={receiptData} settings={settings} />
                 </div>
 
                 {/* Action Buttons */}
