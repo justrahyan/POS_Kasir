@@ -149,12 +149,12 @@ function PrintReceiptModal({ isOpen, receiptData, onClose, settings }) {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({
             unit: 'mm',
-            format: [57, 200] // Ukuran kertas PDF diubah ke 57mm
+            format: [58, 200] // Ukuran kertas PDF
         });
 
         // --- VARIABEL UNTUK KONTROL LAYOUT ---
         let yPosition = 10;
-        const pageWidth = 57; // Diubah ke 57mm
+        const pageWidth = 58;
         const leftMargin = 3;
         const rightMargin = pageWidth - 3; // Posisi rata kanan
         
@@ -248,80 +248,64 @@ function PrintReceiptModal({ isOpen, receiptData, onClose, settings }) {
     };
 
     const handleDirectPrint = () => {
-        // Tambahkan style print langsung ke halaman
+        const printContent = document.getElementById('receipt-preview').innerHTML;
+        
         const printStyles = `
-            @media print {
-                @page {
-                    size: 57mm auto;
-                    margin: 0;
+            <style>
+                @media print {
+                    @page {
+                        size: auto;
+                        margin: 0;
+                    }
+                    html, body {
+                        margin: 0 !important;
+                        padding: 0 !important;
+                    }
+                    body {
+                        width: 57mm;
+                        box-sizing: border-box !important;
+                        padding-left: 3mm !important; 
+                        padding-right: 1mm !important;
+                    }
+                    body * {
+                        font-family: monospace !important;
+                        font-size: 10px !important;
+                        line-height: 1.2 !important;
+                    }
+                    table {
+                        width: 100%;
+                    }
+                    strong {
+                        font-weight: bold;
+                    }
                 }
-                html, body {
-                    margin: 0 !important;
-                    padding: 0 !important;
-                }
-                body {
-                    width: 57mm;
-                    box-sizing: border-box !important;
-                    padding-left: 3mm !important;
-                    padding-right: 1mm !important;
-                }
-                body * {
-                    font-family: monospace !important;
-                    font-size: 10px !important;
-                    line-height: 1.2 !important;
-                }
-                table {
-                    width: 100%;
-                }
-                strong {
-                    font-weight: bold;
-                }
-                /* Sembunyikan SEMUA elemen kecuali konten struk */
-                body > *:not(#receipt-only-content) {
-                    display: none !important;
-                }
-                .fixed, .bg-gray-800, .bg-white, .rounded-lg, .shadow-xl,
-                .modal-header, .modal-buttons, .modal-close, .preview-container,
-                .preview-header, .print-actions, h3, h4, button, .grid,
-                .border-dashed, .bg-gray-50, .text-center, .flex, .mb-4 {
-                    display: none !important;
-                }
-                /* Tampilkan hanya konten struk */
-                #receipt-only-content {
-                    display: block !important;
-                    visibility: visible !important;
-                    position: static !important;
-                    width: 100% !important;
-                    height: auto !important;
-                }
-            }
+            </style>
         `;
+        
+        const iframe = document.createElement('iframe');
+        iframe.style.position = 'absolute';
+        iframe.style.left = '-9999px';
+        document.body.appendChild(iframe);
 
-        // Hapus style print yang ada (jika ada)
-        const existingStyle = document.getElementById('temp-print-styles');
-        if (existingStyle) {
-            existingStyle.remove();
-        }
+        const doc = iframe.contentWindow.document;
+        doc.open();
+        doc.write('<html><head>');
+        doc.write(printStyles);
+        doc.write('</head><body>');
 
-        // Tambahkan style print temporary
-        const styleElement = document.createElement('style');
-        styleElement.id = 'temp-print-styles';
-        styleElement.textContent = printStyles;
-        document.head.appendChild(styleElement);
+        doc.write(printContent);
 
-        // Tampilkan konten struk untuk print
-        const receiptContent = document.getElementById('receipt-only-content');
-        const originalDisplay = receiptContent.style.display;
-        receiptContent.style.display = 'block';
-
-        // Print langsung
-        window.print();
-
-        // Cleanup setelah print
+        doc.write('</body></html>');
+        doc.close();
+        
         setTimeout(() => {
-            receiptContent.style.display = originalDisplay;
-            styleElement.remove();
-        }, 1000);
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+        }, 50);
+        
+        setTimeout(() => {
+            document.body.removeChild(iframe);
+        }, 500);
     };
 
     if (!isOpen) return null;
@@ -329,26 +313,21 @@ function PrintReceiptModal({ isOpen, receiptData, onClose, settings }) {
     return (
         <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md max-h-screen overflow-y-auto">
-                <div className="flex justify-between items-center mb-4 modal-header">
+                <div className="flex justify-between items-center mb-4">
                     <h3 className="text-xl font-bold">Cetak Struk</h3>
-                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl modal-close">&times;</button>
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
                 </div>
                 
                 {/* Receipt Preview */}
-                <div className="border border-gray-300 rounded-lg p-4 mb-4 bg-gray-50 preview-container">
-                    <h4 className="text-sm font-semibold mb-2 text-center preview-header">Preview Struk</h4>
+                <div className="border border-gray-300 rounded-lg p-4 mb-4 bg-gray-50">
+                    <h4 className="text-sm font-semibold mb-2 text-center">Preview Struk</h4>
                     <div id="receipt-preview" className="border border-dashed border-gray-400 bg-white">
                         <ReceiptPreview receiptData={receiptData} settings={settings} />
                     </div>
                 </div>
 
-                {/* Hidden content untuk print - hanya konten struk */}
-                <div id="receipt-only-content" style={{ display: 'none' }}>
-                    <ReceiptPreview receiptData={receiptData} settings={settings} />
-                </div>
-
                 {/* Action Buttons */}
-                <div className="grid grid-cols-2 gap-3 modal-buttons">
+                <div className="grid grid-cols-2 gap-3">
                     <button 
                         onClick={handleDownloadPDF}
                         className="flex items-center justify-center gap-2 bg-blue-500 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-600 transition"
@@ -365,7 +344,7 @@ function PrintReceiptModal({ isOpen, receiptData, onClose, settings }) {
                     </button>
                 </div>
                 
-                <div className="mt-4 text-center modal-buttons">
+                <div className="mt-4 text-center">
                     <button 
                         onClick={onClose}
                         className="text-gray-500 hover:text-gray-700 text-sm"
