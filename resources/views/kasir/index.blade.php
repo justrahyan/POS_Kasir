@@ -144,6 +144,7 @@ function ReceiptPreview({ receiptData, settings }) {
 }
 
 // Modal Print Receipt
+// Modal Print Receipt
 function PrintReceiptModal({ isOpen, receiptData, onClose, settings }) {
     const handleDownloadPDF = () => {
         const { jsPDF } = window.jspdf;
@@ -207,7 +208,7 @@ function PrintReceiptModal({ isOpen, receiptData, onClose, settings }) {
             doc.text(item.name, leftMargin, yPosition);
             yPosition += 4;
             // Kuantitas & harga satuan (rata kiri)
-            doc.text(`  ${item.quantity} x ${formatRupiah(item.price)}`, leftMargin, yPosition);
+            doc.text(`  ${item.quantity} x ${formatRupiah(item.price)}`, leftMargin, yPosition);
             // Subtotal (rata kanan)
             doc.text(formatRupiah(item.subtotal), rightMargin, yPosition, { align: 'right' });
             yPosition += 4;
@@ -248,13 +249,14 @@ function PrintReceiptModal({ isOpen, receiptData, onClose, settings }) {
     };
 
     const handleDirectPrint = () => {
+        // PERBAIKAN: Ganti ID yang salah ketik
         const printContent = document.getElementById('receipt-only-content').innerHTML;
-        
+
         const printStyles = `
             <style>
                 @media print {
                     @page {
-                        size: auto;
+                        size: 58mm auto; /* Ukuran kertas 58mm */
                         margin: 0;
                     }
                     html, body {
@@ -262,9 +264,9 @@ function PrintReceiptModal({ isOpen, receiptData, onClose, settings }) {
                         padding: 0 !important;
                     }
                     body {
-                        width: 57mm;
+                        width: 58mm;
                         box-sizing: border-box !important;
-                        padding-left: 3mm !important; 
+                        padding-left: 3mm !important;
                         padding-right: 1mm !important;
                     }
                     body * {
