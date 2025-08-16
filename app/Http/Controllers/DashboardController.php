@@ -12,17 +12,14 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        // 1. Data untuk Kartu Ringkasan
         $totalPendapatanHariIni = Transaction::whereDate('created_at', today())->sum('total');
         $jumlahTransaksiHariIni = Transaction::whereDate('created_at', today())->count();
         $produkTerjualHariIni = TransactionDetail::whereHas('transaction', function ($query) {
             $query->whereDate('created_at', today());
         })->sum('qty');
 
-        // 2. Data untuk Transaksi Terakhir
-        $transaksiTerakhir = Transaction::with('details.product')->latest()->take(5)->get();
+        $transaksiTerakhir = Transaction::with('details')->latest()->take(5)->get();
 
-        // 3. Data untuk Grafik Pendapatan 7 Hari Terakhir
         $endDate = Carbon::today();
         $startDate = Carbon::today()->subDays(6);
 
