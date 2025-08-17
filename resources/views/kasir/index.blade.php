@@ -251,11 +251,87 @@ function PrintReceiptModal({ isOpen, receiptData, onClose, settings }) {
         const isMobile = /Mobi|Android/i.test(navigator.userAgent);
 
         if (isMobile) {
-            // Ambil data struk dari element
-            const rawContent = document.getElementById('receipt-preview').innerText;
+            // Ambil data dari state atau props, jangan dari innerText
+            const { transactionId, total, paid, change, items, paymentMethod } = receiptData;
+            const { store_name, store_address, store_phone } = settings;
 
-            // Kirim ke RawBT dalam bentuk plain text
-            window.location.href = "intent://print/" + encodeURIComponent(rawContent) + "#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end";
+            // Kode ESC/POS untuk formatting
+            const CENTER = '\x1B\x61\x01'; // Kode untuk rata tengah
+            const LEFT = '\x1B\x61\x00'; // Kode untuk rata kiri
+            const RIGHT = '\x1B\x61\x02'; // Kode untuk rata kanan
+            const BOLD_ON = '\x1B\x45\x01'; // Bold on
+            const BOLD_OFF = '\x1B\x45\x00'; // Bold off
+            const CUT = '\x1D\x56\x42\x00'; // Potong kertas penuh
+            const FONT_A = '\x1B\x4D\x00'; // Font A (normal)
+            const FONT_B = '\x1B\x4D\x01'; // Font B (kecil)
+            const DOUBLE_W = '\x1D\x21\x10'; // Double width
+            const DOUBLE_H = '\x1D\x21\x01'; // Double height
+            const NORMAL_FONT = '\x1D\x21\x00'; // Normal font size
+
+            let printContent = "";
+
+            // Fungsi bantu untuk baris info transaksi dan total
+            const addInfoLine = (label, value) => {
+                const line = `${label.padEnd(15, ' ')}${value.padStart(15, ' ')}`;
+                return line + '\n';
+            };
+            
+            // Fungsi bantu untuk garis putus-putus
+            const drawDashedLine = (length) => {
+                return "-".repeat(length) + '\n';
+            };
+
+            // Header (Rata Tengah)
+            printContent += CENTER + BOLD_ON + (store_name || 'NAMA TOKO') + '\n';
+            printContent += FONT_B + (store_address || 'Alamat Toko') + '\n';
+            printContent += `Telp: ${store_phone || 'No. Telepon'}` + '\n';
+            printContent += NORMAL_FONT + BOLD_OFF;
+
+            // Garis pemisah
+            printContent += drawDashedLine(32);
+
+            // Info Transaksi (Rata Kiri dan Kanan)
+            const currentDate = new Date().toLocaleDateString('id-ID', {
+                day: '2-digit', month: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            }).replace('.', ':');
+            
+            printContent += LEFT + `No Transaksi` + RIGHT + ` #${transactionId || 'TRX001'}\n`;
+            printContent += LEFT + `Tanggal` + RIGHT + ` ${currentDate}\n`;
+            printContent += LEFT + `Kasir` + RIGHT + ` Admin\n`;
+            
+            // Garis pemisah
+            printContent += LEFT + drawDashedLine(32);
+
+            // Daftar Item (Rata Kiri dan Kanan)
+            items.forEach(item => {
+                printContent += item.name + '\n';
+                printContent += ` ${item.quantity} x ${formatRupiah(item.price)}` + RIGHT + formatRupiah(item.subtotal) + '\n';
+            });
+
+            // Garis pemisah
+            printContent += LEFT + drawDashedLine(32);
+
+            // Total (Rata Kiri dan Kanan)
+            printContent += BOLD_ON + `TOTAL` + RIGHT + `${formatRupiah(total)}\n`;
+            printContent += BOLD_OFF + LEFT + `Bayar (${paymentMethod === 'cash' ? 'Tunai' : 'QRIS'})` + RIGHT + `${formatRupiah(paid)}\n`;
+
+            if (change > 0) {
+                printContent += LEFT + `Kembalian` + RIGHT + `${formatRupiah(change)}\n`;
+            }
+
+            // Garis pemisah
+            printContent += LEFT + drawDashedLine(32);
+
+            // Footer (Rata Tengah)
+            printContent += CENTER + 'Terima kasih atas kunjungan Anda!' + '\n';
+            printContent += 'Barang yang sudah dibeli\n';
+            printContent += 'tidak dapat dikembalikan' + '\n';
+            printContent += CUT;
+
+            // Kirim ke RawBT dalam bentuk plain text dengan kode ESC/POS
+            window.location.href = "intent://print/" + encodeURIComponent(printContent) + "#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end";
+
         } else {
             // === Kalau dari Laptop/PC, pake metode print kamu ===
             const printContent = document.getElementById('receipt-preview').innerHTML;
