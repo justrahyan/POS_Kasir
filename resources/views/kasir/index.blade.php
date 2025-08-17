@@ -248,65 +248,58 @@ function PrintReceiptModal({ isOpen, receiptData, onClose, settings }) {
     };
 
     const handleDirectPrint = () => {
-        const printContent = document.getElementById('receipt-preview').innerHTML;
-        
-        const printStyles = `
-            <style>
-                @media print {
-                    @page {
-                        size: auto;
-                        margin: 0;
-                    }
-                    html, body {
-                        margin: 0 !important;
-                        padding: 0 !important;
-                    }
-                    body {
-                        width: 57mm;
-                        box-sizing: border-box !important;
-                        padding-left: 3mm !important; 
-                        padding-right: 1mm !important;
-                    }
-                    body * {
-                        font-family: monospace !important;
-                        font-size: 10px !important;
-                        line-height: 1.2 !important;
-                    }
-                    table {
-                        width: 100%;
-                    }
-                    strong {
-                        font-weight: bold;
-                    }
-                }
-            </style>
-        `;
-        
-        const iframe = document.createElement('iframe');
-        iframe.style.position = 'absolute';
-        iframe.style.left = '-9999px';
-        document.body.appendChild(iframe);
+    const printContent = document.getElementById('receipt-preview').innerHTML;
 
-        const doc = iframe.contentWindow.document;
-        doc.open();
-        doc.write('<html><head>');
-        doc.write(printStyles);
-        doc.write('</head><body>');
+    const printWindow = window.open('', '_blank', 'width=400,height=600');
+    printWindow.document.open();
+    printWindow.document.write(`
+        <html>
+            <head>
+                <title>Print Struk</title>
+                <style>
+                    @media print {
+                        @page {
+                            size: auto;
+                            margin: 0;
+                        }
+                        html, body {
+                            margin: 0 !important;
+                            padding: 0 !important;
+                        }
+                        body {
+                            width: 57mm;
+                            box-sizing: border-box !important;
+                            padding-left: 3mm !important; 
+                            padding-right: 1mm !important;
+                        }
+                        body * {
+                            font-family: monospace !important;
+                            font-size: 10px !important;
+                            line-height: 1.2 !important;
+                        }
+                        table {
+                            width: 100%;
+                        }
+                        strong {
+                            font-weight: bold;
+                        }
+                    }
+                </style>
+            </head>
+            <body>
+                ${printContent}
+                <script>
+                    window.onload = function() {
+                        window.print();
+                        setTimeout(() => window.close(), 500);
+                    };
+                </scr` + `ipt>
+            </body>
+        </html>
+    `);
+    printWindow.document.close();
+};
 
-        doc.write(printContent);
-
-        doc.write('</body></html>');
-        doc.close();
-        
-        setTimeout(() => {
-            iframe.contentWindow.focus();
-            iframe.contentWindow.print();
-        }, 50);
-        
-        setTimeout(() => {
-            document.body.removeChild(iframe);
-        }, 500);
-    };
 
     if (!isOpen) return null;
 
