@@ -251,86 +251,87 @@ function PrintReceiptModal({ isOpen, receiptData, onClose, settings }) {
         const isMobile = /Mobi|Android/i.test(navigator.userAgent);
 
         if (isMobile) {
-            // Ambil data dari state atau props, jangan dari innerText
+            // Ambil data yang diperlukan
             const { transactionId, total, paid, change, items, paymentMethod } = receiptData;
             const { store_name, store_address, store_phone } = settings;
 
-            // Kode ESC/POS untuk formatting
-            const CENTER = '\x1B\x61\x01'; // Kode untuk rata tengah
-            const LEFT = '\x1B\x61\x00'; // Kode untuk rata kiri
-            const RIGHT = '\x1B\x61\x02'; // Kode untuk rata kanan
-            const BOLD_ON = '\x1B\x45\x01'; // Bold on
-            const BOLD_OFF = '\x1B\x45\x00'; // Bold off
-            const CUT = '\x1D\x56\x42\x00'; // Potong kertas penuh
+            // --- KODE ESC/POS UNTUK FORMATTING ---
+            const CENTER = '\x1B\x61\x01'; // Rata tengah
+            const LEFT = '\x1B\x61\x00';   // Rata kiri
+            const BOLD_ON = '\x1B\x45\x01';
+            const BOLD_OFF = '\x1B\x45\x00';
             const FONT_A = '\x1B\x4D\x00'; // Font A (normal)
             const FONT_B = '\x1B\x4D\x01'; // Font B (kecil)
-            const DOUBLE_W = '\x1D\x21\x10'; // Double width
-            const DOUBLE_H = '\x1D\x21\x01'; // Double height
-            const NORMAL_FONT = '\x1D\x21\x00'; // Normal font size
+            const CUT = '\x1D\x56\x42\x00';
 
             let printContent = "";
 
-            // Fungsi bantu untuk baris info transaksi dan total
-            const addInfoLine = (label, value) => {
-                const line = `${label.padEnd(15, ' ')}${value.padStart(15, ' ')}`;
-                return line + '\n';
-            };
-            
-            // Fungsi bantu untuk garis putus-putus
-            const drawDashedLine = (length) => {
-                return "-".repeat(length) + '\n';
+            // Fungsi bantu untuk membuat baris dengan teks rata kiri & kanan
+            const formatSpacedLine = (leftText, rightText, totalWidth = 32) => {
+                const spaces = totalWidth - leftText.length - rightText.length;
+                return leftText + ' '.repeat(spaces) + rightText + '\n';
             };
 
-            // Header (Rata Tengah)
+            // Fungsi bantu untuk garis putus-putus
+            const drawDashedLine = (length = 32) => {
+                return "-".repeat(length) + '\n';
+            };
+            
+            // --- HEADER ---
             printContent += CENTER + BOLD_ON + (store_name || 'NAMA TOKO') + '\n';
             printContent += FONT_B + (store_address || 'Alamat Toko') + '\n';
             printContent += `Telp: ${store_phone || 'No. Telepon'}` + '\n';
-            printContent += NORMAL_FONT + BOLD_OFF;
+            printContent += BOLD_OFF + FONT_A;
 
-            // Garis pemisah
-            printContent += drawDashedLine(32);
+            printContent += drawDashedLine();
 
-            // Info Transaksi (Rata Kiri dan Kanan)
+            // --- INFO TRANSAKSI ---
             const currentDate = new Date().toLocaleDateString('id-ID', {
-                day: '2-digit', month: '2-digit', year: 'numeric',
+                day: '2-digit', month: '2-digit', year: 'numeric'
+            });
+            const currentTime = new Date().toLocaleTimeString('id-ID', {
                 hour: '2-digit', minute: '2-digit'
-            }).replace('.', ':');
+            });
             
-            printContent += LEFT + `No Transaksi` + RIGHT + ` #${transactionId || 'TRX001'}\n`;
-            printContent += LEFT + `Tanggal` + RIGHT + ` ${currentDate}\n`;
-            printContent += LEFT + `Kasir` + RIGHT + ` Admin\n`;
-            
-            // Garis pemisah
-            printContent += LEFT + drawDashedLine(32);
+            printContent += LEFT;
+            printContent += formatSpacedLine('No Transaksi', `#${receiptData.transactionId || 'TRX001'}`);
+            printContent += formatSpacedLine('Tanggal', `${currentDate}, ${currentTime}`);
+            printContent += formatSpacedLine('Kasir', 'Admin');
 
-            // Daftar Item (Rata Kiri dan Kanan)
+            printContent += drawDashedLine();
+
+            // --- DAFTAR ITEM ---
             items.forEach(item => {
+                const itemPriceStr = formatRupiah(item.price);
+                const subtotalStr = formatRupiah(item.subtotal);
+                const itemQtyPrice = `1 x ${itemPriceStr}`;
+                
                 printContent += item.name + '\n';
-                printContent += ` ${item.quantity} x ${formatRupiah(item.price)}` + RIGHT + formatRupiah(item.subtotal) + '\n';
+                printContent += formatSpacedLine(itemQtyPrice, subtotalStr);
             });
 
-            // Garis pemisah
-            printContent += LEFT + drawDashedLine(32);
+            printContent += drawDashedLine();
 
-            // Total (Rata Kiri dan Kanan)
-            printContent += BOLD_ON + `TOTAL` + RIGHT + `${formatRupiah(total)}\n`;
-            printContent += BOLD_OFF + LEFT + `Bayar (${paymentMethod === 'cash' ? 'Tunai' : 'QRIS'})` + RIGHT + `${formatRupiah(paid)}\n`;
-
-            if (change > 0) {
-                printContent += LEFT + `Kembalian` + RIGHT + `${formatRupiah(change)}\n`;
+            // --- TOTALS ---
+            printContent += BOLD_ON;
+            printContent += formatSpacedLine('TOTAL', formatRupiah(receiptData.total));
+            printContent += BOLD_OFF;
+            printContent += formatSpacedLine(`Bayar (${receiptData.paymentMethod === 'cash' ? 'Tunai' : 'QRIS'})`, formatRupiah(receiptData.paid));
+            
+            if (receiptData.change > 0) {
+                printContent += formatSpacedLine('Kembalian', formatRupiah(receiptData.change));
             }
 
-            // Garis pemisah
-            printContent += LEFT + drawDashedLine(32);
+            printContent += drawDashedLine();
 
-            // Footer (Rata Tengah)
+            // --- FOOTER ---
             printContent += CENTER + 'Terima kasih atas kunjungan Anda!' + '\n';
             printContent += 'Barang yang sudah dibeli\n';
             printContent += 'tidak dapat dikembalikan' + '\n';
             printContent += CUT;
 
-            // Kirim ke RawBT dalam bentuk plain text dengan kode ESC/POS
-            window.location.href = "intent://print/" + encodeURIComponent(printContent) + "#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end";
+            // Kirim ke RawBT
+            window.location.href = "intent:" + encodeURIComponent(printContent) + "#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end";
 
         } else {
             // === Kalau dari Laptop/PC, pake metode print kamu ===
