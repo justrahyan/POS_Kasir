@@ -248,57 +248,66 @@ function PrintReceiptModal({ isOpen, receiptData, onClose, settings }) {
     };
 
     const handleDirectPrint = () => {
-    const printContent = document.getElementById('receipt-preview').innerHTML;
+        // Deteksi user agent untuk mobile
+        const isMobile = /Mobi|Android/i.test(navigator.userAgent);
 
-    const printWindow = window.open('', '_blank', 'width=400,height=600');
-    printWindow.document.open();
-    printWindow.document.write(`
-        <html>
-            <head>
-                <title>Print Struk</title>
-                <style>
-                    @media print {
-                        @page {
-                            size: auto;
-                            margin: 0;
-                        }
-                        html, body {
-                            margin: 0 !important;
-                            padding: 0 !important;
-                        }
-                        body {
-                            width: 57mm;
-                            box-sizing: border-box !important;
-                            padding-left: 3mm !important; 
-                            padding-right: 1mm !important;
-                        }
-                        body * {
-                            font-family: monospace !important;
-                            font-size: 10px !important;
-                            line-height: 1.2 !important;
-                        }
-                        table {
-                            width: 100%;
-                        }
-                        strong {
-                            font-weight: bold;
-                        }
-                    }
-                </style>
-            </head>
-            <body>
-                ${printContent}
-                <script>
-                    window.onload = function() {
-                        window.print();
-                        setTimeout(() => window.close(), 500);
-                    };
-                </scr` + `ipt>
-            </body>
-        </html>
-    `);
-    printWindow.document.close();
-};
+        if (isMobile) {
+            // === Kalau dari HP, langsung panggil intent RawBT ===
+            window.location.href = "intent://print/#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end";
+        } else {
+            // === Kalau dari Laptop/PC, pake metode print kamu ===
+            const printContent = document.getElementById('receipt-preview').innerHTML;
+
+            const printWindow = window.open('', '_blank', 'width=400,height=600');
+            printWindow.document.open();
+            printWindow.document.write(`
+                <html>
+                    <head>
+                        <title>Print Struk</title>
+                        <style>
+                            @media print {
+                                @page {
+                                    size: auto;
+                                    margin: 0;
+                                }
+                                html, body {
+                                    margin: 0 !important;
+                                    padding: 0 !important;
+                                }
+                                body {
+                                    width: 57mm;
+                                    box-sizing: border-box !important;
+                                    padding-left: 3mm !important; 
+                                    padding-right: 1mm !important;
+                                }
+                                body * {
+                                    font-family: monospace !important;
+                                    font-size: 10px !important;
+                                    line-height: 1.2 !important;
+                                }
+                                table {
+                                    width: 100%;
+                                }
+                                strong {
+                                    font-weight: bold;
+                                }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        ${printContent}
+                        <script>
+                            window.onload = function() {
+                                window.print();
+                                setTimeout(() => window.close(), 500);
+                            };
+                        </scr` + `ipt>
+                    </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+    };
 
 
     if (!isOpen) return null;
