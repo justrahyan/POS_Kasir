@@ -248,12 +248,14 @@ function PrintReceiptModal({ isOpen, receiptData, onClose, settings }) {
     };
 
     const handleDirectPrint = () => {
-        // Deteksi user agent untuk mobile
         const isMobile = /Mobi|Android/i.test(navigator.userAgent);
 
         if (isMobile) {
-            // === Kalau dari HP, langsung panggil intent RawBT ===
-            window.location.href = "intent://print/#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end";
+            // Ambil data struk dari element
+            const rawContent = document.getElementById('receipt-preview').innerText;
+
+            // Kirim ke RawBT dalam bentuk plain text
+            window.location.href = "intent://print/" + encodeURIComponent(rawContent) + "#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end";
         } else {
             // === Kalau dari Laptop/PC, pake metode print kamu ===
             const printContent = document.getElementById('receipt-preview').innerHTML;
